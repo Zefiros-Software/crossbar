@@ -132,6 +132,7 @@ class PendingAuthWampCra(PendingAuth):
 
             self._session_details[u'authmethod'] = self._authmethod  # from AUTHMETHOD, via base
             self._session_details[u'authextra'] = details.authextra
+            self._session_details[u'authphase'] = 'preChallenge'
 
             d = self._authenticator_session.call(self._authenticator, realm, details.authid, self._session_details)
 
@@ -155,8 +156,34 @@ class PendingAuthWampCra(PendingAuth):
             return types.Deny(message=u'invalid authentication configuration (authentication type "{}" is unknown)'.format(self._config['type']))
 
     def authenticate(self, signature):
+        
+        if self._authprovider == u'dynamic' and self._config.get('manual-signature-check', False):
 
-        if signature == self._signature:
+            self._session_details[u'authphase'] = 'checkSignature'
+            self._session_details[u'signature'] = signature
+
+            d = self._authenticator_session.call(self._authenticator, self._realm, self._authid, self._session_details)
+
+            def on_signature_ok(signature):
+                if isinstance(signature, dict):
+                    if 'success' in signature and signature['success']:
+                        if 'extra' in signature and isinstance(signature['extra'], dict):
+                            if self._authextra is None:
+                                self._authextra = {}
+
+                            self._authextra.update(signature['extra'])
+                        # signature was valid: accept the client
+                        return self._accept()
+                else:
+                    return types.Deny(message=u"WAMP-CRA signature is invalid")
+
+            def on_signature_error(err):
+                return self._marshal_dynamic_authenticator_error(err)
+
+            d.addCallbacks(on_signature_ok, on_signature_error)            
+
+            return d
+        elif signature == self._signature:
             # signature was valid: accept the client
             return self._accept()
         else:
