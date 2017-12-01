@@ -132,7 +132,8 @@ class PendingAuthWampCra(PendingAuth):
 
             self._session_details[u'authmethod'] = self._authmethod  # from AUTHMETHOD, via base
             self._session_details[u'authextra'] = details.authextra
-            self._session_details[u'authphase'] = 'preChallenge'
+            if self._config.get('manual-signature-check', False):
+                self._session_details[u'authphase'] = 'preChallenge'
 
             d = self._authenticator_session.call(self._authenticator, realm, details.authid, self._session_details)
 
