@@ -168,6 +168,9 @@ class PendingAuthWampCra(PendingAuth):
             def on_signature_ok(signature):
                 if isinstance(signature, dict):
                     if 'success' in signature and signature['success']:
+                        if 'authid' in signature:
+                            self._authid = signature['authid']
+
                         if 'extra' in signature and isinstance(signature['extra'], dict):
                             if self._authextra is None:
                                 self._authextra = {}
