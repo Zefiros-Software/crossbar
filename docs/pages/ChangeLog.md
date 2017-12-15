@@ -5,7 +5,8 @@ toc: [Documentation, Programming Guide, ChangeLog]
 Crossbar.io master (unreleased)
 ===============================
 
-* ADD ME
+* new: manage web services at the resource level (fixes #1078)
+* new: reverse WebSocket proxy (Web service)
 
 
 Crossbar.io 17.11.1 (2017-11-03)
